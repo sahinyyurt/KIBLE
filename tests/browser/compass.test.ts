@@ -37,7 +37,7 @@ after(async () => {
   server?.kill();
 });
 
-async function openCompass() {
+async function openCompass(query = '') {
   const page = await browser.newPage();
   page.setDefaultTimeout(5_000);
   await page.addInitScript(() => {
@@ -58,7 +58,7 @@ async function openCompass() {
       });
     Object.defineProperty(screen.orientation, 'angle', { configurable: true, value: 0 });
   });
-  await page.goto(url);
+  await page.goto(url + query);
   await page.getByText('Mevcut konumun', { exact: true }).waitFor();
   await page.getByRole('button', { name: 'Sensör bekleniyor…' }).waitFor();
   return page;
@@ -81,6 +81,7 @@ async function sendHeading(page: Page, alpha: number) {
 test('Startup and restart do not show a direction until north-referenced data arrives', async () => {
   const page = await openCompass();
   try {
+    assert.equal(await page.getByRole('region', { name: 'Pusula tanılama' }).count(), 0);
     assert.equal(
       await page.locator('.pointer').count(),
       0,
@@ -103,6 +104,43 @@ test('Startup and restart do not show a direction until north-referenced data ar
       await page.locator('.ticks').evaluate((element) => (element as HTMLElement).style.transform),
       'rotate(-180deg)',
       'Restart must not smooth against the old session',
+    );
+  } finally {
+    await page.close();
+  }
+});
+
+test('Opt-in diagnostics capture sensor sources and restart output without coordinates', async () => {
+  const page = await openCompass('?compassDebug=1');
+  try {
+    await page.clock.install();
+    await page.getByRole('button', { name: '10 saniyelik kaydı başlat' }).click();
+    await sendHeading(page, 270);
+    await page.clock.runFor(500);
+    await page.getByRole('button', { name: 'Kayıt sırasında pusulayı yeniden başlat' }).click();
+    await page.getByRole('button', { name: 'Sensör bekleniyor…' }).waitFor();
+    await sendHeading(page, 270);
+    await page.clock.runFor(10_000);
+    const text = await page.getByRole('textbox', { name: 'Pusula tanılama raporu' }).inputValue();
+    const report = JSON.parse(text);
+    assert.equal(report.version, 1);
+    assert.ok(report.counts.deviceorientationabsolute >= 2);
+    assert.ok(report.samples.some((sample: { rawHeading: number }) => sample.rawHeading === 90));
+    assert.ok(
+      report.outputs.some(
+        (output: { restarts: number; heading: number }) =>
+          output.restarts === 1 && output.heading === 90,
+      ),
+    );
+    assert.equal(text.includes('latitude'), false);
+    assert.equal(text.includes('longitude'), false);
+    assert.equal(text.includes('41.0082'), false);
+    await sendHeading(page, 180);
+    await page.clock.runFor(1_000);
+    assert.equal(
+      await page.getByRole('textbox', { name: 'Pusula tanılama raporu' }).inputValue(),
+      text,
+      'Completed recordings must stop listening',
     );
   } finally {
     await page.close();

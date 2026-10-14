@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowUpRight, Compass, Info, ShieldCheck } from 'lucide-react';
 import { CompassCard } from './components/CompassCard';
+import { CompassDiagnostics } from './components/CompassDiagnostics';
 import { HelpContent } from './components/HelpContent';
 import { LocationCard } from './components/LocationCard';
 import { LocationPicker } from './components/LocationPicker';
@@ -18,6 +19,8 @@ export default function App() {
   const compass = useCompass();
   const [dialog, setDialog] = useState<Dialog>(null);
   const qibla = location ? calculateQibla(location) : null;
+  const diagnosticsEnabled =
+    new URLSearchParams(window.location.search).get('compassDebug') === '1';
 
   function closeDialog() {
     setDialog(null);
@@ -63,6 +66,13 @@ export default function App() {
           )}
           <CompassCard qibla={qibla} heading={compass.heading} />
           <aside>
+            {diagnosticsEnabled && (
+              <CompassDiagnostics
+                heading={compass.heading}
+                status={compass.status}
+                onRestart={() => void compass.start()}
+              />
+            )}
             <LocationCard
               location={location}
               isLocating={isLocating}
