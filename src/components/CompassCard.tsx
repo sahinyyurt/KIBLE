@@ -1,4 +1,4 @@
-import { Navigation } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import { getHeadingDifference } from '../lib/angles';
 import type { QiblaResult } from '../lib/qibla';
 
@@ -19,7 +19,7 @@ function getDirectionTitle(
   if (!qibla) return 'Yönünü keşfet';
   if (qibla.distanceKm < NEAR_KAABA_DISTANCE_KM) return 'Kâbe’nin yakınındasın';
   if (isAligned) return 'Kıble yönündesin';
-  if (turnAngle === null) return 'Kıble açın hazır';
+  if (turnAngle === null) return 'Pusula yönü bekleniyor';
 
   const direction = turnAngle > 0 ? 'sağa' : 'sola';
   return `${Math.round(Math.abs(turnAngle))}° ${direction} dön`;
@@ -30,8 +30,8 @@ function getDirectionDescription(qibla: QiblaResult | null, isLive: boolean): st
   if (qibla.distanceKm < NEAR_KAABA_DISTANCE_KM)
     return 'Bu mesafede GPS doğruluğu yönü etkileyebilir.';
   return isLive
-    ? 'Telefonu önünde tut; ok yönüne doğru dön.'
-    : 'Canlı yönlendirme için pusulayı etkinleştir.';
+    ? 'Telefonu yataya yakın tut; üst kenarını ok yönüne çevir.'
+    : 'Telefonu yataya yakın tut. Yön verisi gelmeden ok gösterilmez.';
 }
 
 export function CompassCard({ qibla, heading }: CompassCardProps) {
@@ -39,13 +39,9 @@ export function CompassCard({ qibla, heading }: CompassCardProps) {
   const turnAngle = qibla && heading !== null ? getHeadingDifference(qibla.bearing, heading) : null;
   const isAligned = turnAngle !== null && Math.abs(turnAngle) < ALIGNMENT_TOLERANCE_DEGREES;
   const dialHeading = heading ?? 0;
-  const statusLabel = isLive
-    ? 'Pusula aktif'
-    : qibla
-      ? 'Kuzey referanslı görünüm'
-      : 'Konum bekleniyor';
+  const statusLabel = isLive ? 'Pusula aktif' : qibla ? 'Yön bekleniyor' : 'Konum bekleniyor';
   const dialLabel = qibla
-    ? `Kıble açısı ${qibla.bearing.toFixed(1)} derece. ${isLive ? 'Canlı pusula' : 'Kuzey referanslı sabit gösterim'}`
+    ? `Kıble açısı ${qibla.bearing.toFixed(1)} derece. ${isLive ? 'Canlı pusula' : 'Pusula yönü bekleniyor'}`
     : 'Kıble yönü için konum gerekli';
 
   return (
@@ -59,20 +55,22 @@ export function CompassCard({ qibla, heading }: CompassCardProps) {
       </div>
       <div className={`dial ${isAligned ? 'aligned' : ''}`} role="img" aria-label={dialLabel}>
         <div className="dial-inner" />
-        <div className="ticks" style={{ transform: `rotate(${-dialHeading}deg)` }}>
-          {TICK_ANGLES.map((angle) => (
-            <span
-              key={angle}
-              className={angle % 30 === 0 ? 'major' : ''}
-              style={{ transform: `rotate(${angle}deg)` }}
-            />
-          ))}
-          <b className="north">K</b>
-          <b className="east">D</b>
-          <b className="south">G</b>
-          <b className="west">B</b>
-        </div>
-        {qibla ? (
+        {isLive && (
+          <div className="ticks" style={{ transform: `rotate(${-dialHeading}deg)` }}>
+            {TICK_ANGLES.map((angle) => (
+              <span
+                key={angle}
+                className={angle % 30 === 0 ? 'major' : ''}
+                style={{ transform: `rotate(${angle}deg)` }}
+              />
+            ))}
+            <b className="north">K</b>
+            <b className="east">D</b>
+            <b className="south">G</b>
+            <b className="west">B</b>
+          </div>
+        )}
+        {qibla && isLive ? (
           <div
             className="pointer"
             style={{ transform: `rotate(${qibla.bearing - dialHeading}deg)` }}
@@ -83,15 +81,15 @@ export function CompassCard({ qibla, heading }: CompassCardProps) {
           </div>
         ) : (
           <div className="empty-compass">
-            <Navigation size={60} strokeWidth={1.1} />
+            <Compass size={60} strokeWidth={1.1} />
             <span>
-              Yolculuk bulunduğun
+              {qibla ? 'Yön ölçümü bekleniyor' : 'Yolculuk bulunduğun'}
               <br />
-              yerden başlar.
+              {qibla ? 'Telefonu yataya yakın tut.' : 'yerden başlar.'}
             </span>
           </div>
         )}
-        <div className="center-dot" hidden={!qibla} />
+        <div className="center-dot" hidden={!qibla || !isLive} />
         <span className="dial-ring" />
       </div>
       <div className="direction">

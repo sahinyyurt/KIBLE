@@ -21,8 +21,8 @@ export function SensorCard({ status, message, onStart }: SensorCardProps) {
       <span className="section-label">02 / PUSULA</span>
       <h3>Telefonun sana yol göstersin.</h3>
       <p>
-        Pusula otomatik başlar. Telefonu dik veya eğik tutarak kullanabilirsin; istenirse sensör
-        iznini ver.
+        Pusula otomatik başlar. Telefonu ekranı yukarı bakacak şekilde yataya yakın tut; istenirse
+        sensör iznini ver.
       </p>
       <button className="outline" onClick={onStart}>
         <Compass size={18} />

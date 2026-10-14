@@ -34,21 +34,22 @@ export function tiltHeading(
   const cosRoll = Math.cos(roll);
   const sinRoll = Math.sin(roll);
 
-  // Project the screen-right axis onto the ground. Its perpendicular is
-  // forward, including when the top edge points upward in an upright phone.
+  // Project the visible screen-top axis onto the ground using Rz(alpha)
+  // Rx(beta) Ry(gamma). The perpendicular of screen-right is NOT equivalent
+  // when the phone is tilted around more than one axis.
   const projectedEast =
-    (cosYaw * cosRoll - sinYaw * sinPitch * sinRoll) * Math.cos(screenRotation) +
-    sinYaw * cosPitch * Math.sin(screenRotation);
+    -sinYaw * cosPitch * Math.cos(screenRotation) +
+    (cosYaw * cosRoll - sinYaw * sinPitch * sinRoll) * Math.sin(screenRotation);
   const projectedNorth =
-    (sinYaw * cosRoll + cosYaw * sinPitch * sinRoll) * Math.cos(screenRotation) -
-    cosYaw * cosPitch * Math.sin(screenRotation);
+    cosYaw * cosPitch * Math.cos(screenRotation) +
+    (sinYaw * cosRoll + cosYaw * sinPitch * sinRoll) * Math.sin(screenRotation);
 
-  // A nearly vertical screen-right axis cannot provide a stable azimuth.
+  // A nearly vertical top edge has no reliable horizontal direction.
   if (Math.hypot(projectedEast, projectedNorth) < MIN_HORIZONTAL_PROJECTION) {
     return null;
   }
 
-  return normalizeDegrees(toDegrees(Math.atan2(-projectedNorth, projectedEast)));
+  return normalizeDegrees(toDegrees(Math.atan2(projectedEast, projectedNorth)));
 }
 
 /** Undefined readings are ignored; null clears a heading at an unstable tilt. */

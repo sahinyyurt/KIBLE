@@ -13,14 +13,15 @@ export function HelpContent() {
           kullan. HTTPS ve destekleyen bir telefon gerekir.
         </li>
         <li>
-          <b>Rahatça tut.</b> Telefonu önünde dik veya eğik tutup ok yönüne dön. Yere paralel tutman
-          gerekmez. Metal kılıflardan ve elektronik eşyalardan uzaklaş.
+          <b>Yataya yakın tut.</b> Ekran yukarı bakarken telefonun üst kenarını ok yönüne çevir. Çok
+          dik tutuşta yön belirsizleşir ve ok gizlenir. Metal kılıflardan ve elektronik eşyalardan
+          uzaklaş.
         </li>
       </ol>
       <p>
-        Pusula yoksa kuzey referanslı gösterimi kullan: önce gerçek kuzeyi belirle, sonra gösterilen
-        açı kadar saat yönünde dön. Sensörün manyetik/gerçek kuzey referansı tarayıcıya göre
-        değişebilir; manyetik sapma otomatik düzeltilmez.
+        Pusula yoksa kıble açısını kullan: önce gerçek kuzeyi belirle, sonra gösterilen açı kadar
+        saat yönünde dön. Sensörün manyetik/gerçek kuzey referansı tarayıcıya göre değişebilir;
+        manyetik sapma otomatik düzeltilmez.
       </p>
     </>
   );

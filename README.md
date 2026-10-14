@@ -27,6 +27,17 @@ pnpm build
 pnpm preview
 ```
 
+Gerçek tarayıcıda kontrollü sensör olaylarıyla başlangıç, yeniden başlatma, çapraz eğim ve
+ekran dönüşü testleri:
+
+```sh
+pnpm exec playwright install chromium
+pnpm test:browser
+```
+
+Kurulu Chrome'u kullanmak için `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` ortam değişkenine
+Chrome çalıştırılabilir dosyasının yolunu verin. Bu testler fiziksel sensör kalibrasyonunu ölçmez.
+
 Kod kalitesi kontrolleri:
 
 ```sh
@@ -63,7 +74,12 @@ Sonraki `main` güncellemelerinde test, derleme ve yayın otomatik çalışır. 
 
 Kıble açısı gerçek kuzeyden saat yönünde hesaplanır. Sensörün manyetik/gerçek kuzey referansı cihaza ve tarayıcıya göre değişebilir; uygulama manyetik sapmayı otomatik düzeltmez. Metal nesneler, kılıflar ve kalibrasyon sonucu etkileyebilir. Şehir seçimi şehir merkezini esas alır. Kâbe'ye çok yakınken GPS hatası yönü önemli ölçüde etkileyebilir.
 
-Dik veya eğik tutuş desteklenir; bazı uç tutuşlarda yön izdüşümü belirsizleştiğinde canlı gösterim durdurulur. Telefonu hafifçe döndürün. Otomatik izin istemeyi engelleyen tarayıcılarda düğmeye dokunmak gerekir. Daha önce reddedilen izinleri tarayıcı/site ayarlarından açın.
+Telefonu ekranı yukarı bakacak şekilde yataya yakın tutun; yön ekranın üst kenarını esas alır.
+Android eğim hesabı [W3C dönüş matrisini](https://www.w3.org/TR/orientation-event/)
+kullanarak bu kenarın yatay izdüşümünü hesaplar. Çok dik tutuşta bu izdüşüm belirsizleşir ve ok
+gizlenir. İlk açılışta, yeniden başlatmada ve ekran yönü değiştiğinde yeni sensör verisi gelene
+kadar yön oku gösterilmez. Otomatik izin istemeyi engelleyen tarayıcılarda düğmeye dokunmak
+gerekir. Daha önce reddedilen izinleri tarayıcı/site ayarlarından açın.
 
 Matematik kontrolleri ve üretim derlemesi doğrulanmıştır. Gerçek cihazda sensör/izin davranışı ayrıca test edilmelidir.
 

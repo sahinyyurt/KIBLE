@@ -88,12 +88,25 @@ export function useCompass() {
       setState({ status: 'waiting', heading: null, message: '' });
       let lastReadingAt = Date.now();
       let smoothedHeading: number | null = null;
+      let screenAngle = getScreenAngle();
+
+      const handleScreenChange = () => {
+        const nextAngle = getScreenAngle();
+        if (nextAngle === screenAngle) return;
+        screenAngle = nextAngle;
+        // Headings in different screen coordinate frames cannot be smoothed together.
+        smoothedHeading = null;
+        lastReadingAt = Date.now();
+        setState({ status: 'waiting', heading: null, message: '' });
+      };
 
       const handleOrientation = (event: Event) => {
+        if (currentRequestId !== requestId.current) return;
+        handleScreenChange();
         // Both browser event names carry orientation data, including Safari's extensions.
         const heading = readCompassHeading(
           event as DeviceOrientationEvent & CompassReading,
-          getScreenAngle(),
+          screenAngle,
         );
         if (heading === undefined) return;
 
@@ -116,6 +129,9 @@ export function useCompass() {
 
       window.addEventListener('deviceorientation', handleOrientation);
       window.addEventListener('deviceorientationabsolute', handleOrientation);
+      screen.orientation?.addEventListener('change', handleScreenChange);
+      window.addEventListener('orientationchange', handleScreenChange);
+      window.addEventListener('resize', handleScreenChange);
 
       const timer = window.setInterval(() => {
         if (Date.now() - lastReadingAt > SENSOR_TIMEOUT_MS) {
@@ -124,7 +140,7 @@ export function useCompass() {
             status: 'error',
             heading: null,
             message:
-              'Güvenilir yön verisi alınamıyor. Telefonun tutuşunu biraz değiştir ve metal eşyalardan uzaklaş. Sensör desteklenmiyor olabilir.',
+              'Güvenilir yön verisi alınamıyor. Telefonu yataya yakın tut ve metal eşyalardan uzaklaş. Sensör desteklenmiyor olabilir.',
           });
         }
       }, SENSOR_CHECK_INTERVAL_MS);
@@ -133,6 +149,9 @@ export function useCompass() {
         window.clearInterval(timer);
         window.removeEventListener('deviceorientation', handleOrientation);
         window.removeEventListener('deviceorientationabsolute', handleOrientation);
+        screen.orientation?.removeEventListener('change', handleScreenChange);
+        window.removeEventListener('orientationchange', handleScreenChange);
+        window.removeEventListener('resize', handleScreenChange);
       };
     } catch {
       if (currentRequestId !== requestId.current) return;
